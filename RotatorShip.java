@@ -39,7 +39,7 @@ public class RotatorShip extends BasicSpaceship {
 	@Override
 	public RegistrationData registerShip(int numImages, int worldWidth, int worldHeight) {
 		center = new Point(worldWidth / 2, worldHeight / 2);
-		return new RegistrationData("Trevor T", new Color(0, 0, 0), 10);
+		return new RegistrationData("Ship_name", new Color(0, 0, 0), 10);
 
 	}
 }
