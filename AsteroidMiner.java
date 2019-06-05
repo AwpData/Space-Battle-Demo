@@ -1,19 +1,20 @@
 import java.awt.Color;
-import java.util.ArrayList;
-import java.util.List;
 
 import ihs.apcs.spacebattle.*;
 import ihs.apcs.spacebattle.commands.*;
 
 public class RotatorShip extends BasicSpaceship {
+	static enum States {
+		NEW_RADAR, GET_RADAR_RESULTS, FIRE_TORPEDO, REPAIR_SHIP;
+	}
 
 	public static void main(String[] args) {
 		// run method on TextClient with the IP Address and an instance of your Ship class.10.52.105.88
-		ihs.apcs.spacebattle.TextClient.main(new String[] { "10.52.105.88", "RotatorShip", "2019" });
+		ihs.apcs.spacebattle.TextClient.main(new String[] { "10.52.105.88", "RotatorShip", "2020" });
 	}
 
-	private int currentState = -1;
 	double thrustnum = 2;
+	States state = States.NEW_RADAR;
 
 	@Override
 	public ShipCommand getNextCommand(BasicEnvironment env) {
@@ -21,54 +22,47 @@ public class RotatorShip extends BasicSpaceship {
 		ObjectStatus ship = env.getShipStatus();
 		Point position = ship.getPosition();
 		int orientation = ship.getOrientation();
-		int toCenter = position.getAngleTo(center);
-
-		double myAngle = env.getShipStatus().getOrientation();
-		Point myPos = env.getShipStatus().getPosition();
-
-		double angleTo = myPos.getAngleTo(ship.getPosition()) - myAngle;
-		double distanceTo = myPos.getDistanceTo(ship.getPosition());
-
-		currentState++;
-		switch (currentState) {
-		case 0:
-			return new RadarCommand(5);
-		case 1:
+		switch (state) {
+		case NEW_RADAR:
+			if (ship.getHealth() < 50) {
+				state = States.REPAIR_SHIP;
+			}
+			state = States.GET_RADAR_RESULTS;
+			return new RadarCommand(4);
+		case GET_RADAR_RESULTS:
 			RadarResults results = env.getRadar();
 			if (results == null) {
 				System.out.println("null");
-				currentState = 0;
-				return new RadarCommand(5);
+				state = States.NEW_RADAR;
+				return new RadarCommand(4);
 			}
 			if (results.getNumObjects() == 0) {
-				System.out.println("No objects");
-				currentState = 0;
-				return new RadarCommand(5);
+				System.out.println("No objects found");
+				state = States.NEW_RADAR;
+				return new RadarCommand(4);
 			}
 			if (results.size() < 1) {
 				System.out.println("Empty array");
-				currentState = 0;
-				return new RadarCommand(5);
+				state = States.NEW_RADAR;
+				return new RadarCommand(4);
 			} else {
-				System.out.println(results.getNumObjects());
-				System.out.println(results);
-				Point p = results.get(0).getPosition();
-				int angle = position.getAngleTo(p);
-				double speed = results.get(0).getSpeed();
-				return new RotateCommand(angle);
+				state = States.FIRE_TORPEDO;
+				System.out.println(results.getNumObjects() + " objects nearby");
+				// System.out.println(results); // Full information of nearby objects
+				Point p = results.get(0).getPosition(); // position of object to fire at
+				String name = results.get(0).getType();
+				System.out.println("Attemping to fire at " + name + " at " + p);
+				return new RotateCommand(position.getAngleTo(p) - orientation);
 			}
-		case 2:
-			if (Math.abs(angleTo % 360) < 60) {
-				if (distanceTo < 75) {
-					return new BrakeCommand(0);
-				}
-			}
-		case 3:
+		case FIRE_TORPEDO:
+			state = States.NEW_RADAR;
 			return new FireTorpedoCommand('F');
+		case REPAIR_SHIP:
+			state = States.NEW_RADAR;
+			System.out.println("Ship's health is " + ship.getHealth() + " repairing...");
+			return new RepairCommand(100);
 		default:
-			currentState = -1;
-			return new FireTorpedoCommand('F');
-
+			throw new IllegalStateException("Unknwon State");
 		}
 	}
 
@@ -81,4 +75,3 @@ public class RotatorShip extends BasicSpaceship {
 
 	}
 }
-
