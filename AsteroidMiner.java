@@ -5,12 +5,12 @@ import ihs.apcs.spacebattle.commands.*;
 
 public class RotatorShip extends BasicSpaceship {
 	static enum States {
-		NEW_RADAR, GET_RADAR_RESULTS, FIRE_TORPEDO, REPAIR_SHIP;
+		NEW_RADAR, GET_RADAR_RESULTS, FIRE_TORPEDO;
 	}
 
 	public static void main(String[] args) {
 		// run method on TextClient with the IP Address and an instance of your Ship class.10.52.105.88
-		ihs.apcs.spacebattle.TextClient.main(new String[] { "10.52.105.88", "RotatorShip", "2020" });
+		ihs.apcs.spacebattle.TextClient.main(new String[] { "10.52.105.88", "RotatorShip", "2019" });
 	}
 
 	double thrustnum = 2;
@@ -24,9 +24,6 @@ public class RotatorShip extends BasicSpaceship {
 		int orientation = ship.getOrientation();
 		switch (state) {
 		case NEW_RADAR:
-			if (ship.getHealth() < 50) {
-				state = States.REPAIR_SHIP;
-			}
 			state = States.GET_RADAR_RESULTS;
 			return new RadarCommand(4);
 		case GET_RADAR_RESULTS:
@@ -57,10 +54,6 @@ public class RotatorShip extends BasicSpaceship {
 		case FIRE_TORPEDO:
 			state = States.NEW_RADAR;
 			return new FireTorpedoCommand('F');
-		case REPAIR_SHIP:
-			state = States.NEW_RADAR;
-			System.out.println("Ship's health is " + ship.getHealth() + " repairing...");
-			return new RepairCommand(100);
 		default:
 			throw new IllegalStateException("Unknwon State");
 		}
